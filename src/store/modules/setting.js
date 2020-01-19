@@ -12,7 +12,7 @@ export default {
     isMobile: false,
     theme: db.get('THEME', 'light'),
     layout: db.get('LAYOUT', 'side'),
-    systemName: '权限系统',
+    systemName: 'Fsb权限系统',
     multipage: getBooleanValue(db.get('MULTIPAGE'), true),
     fixSiderbar: getBooleanValue(db.get('FIX_SIDERBAR'), true),
     fixHeader: getBooleanValue(db.get('FIX_HEADER'), true),
