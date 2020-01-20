@@ -30,11 +30,10 @@
 
         <a-input size="large" type="password" autocomplete="false" placeholder="确认密码"></a-input>
       </a-form-item>
-      <!--
       <a-form-item
         fieldDecoratorId="mobile"
         :fieldDecoratorOptions="{rules: [{ required: true, message: '请输入正确的手机号', pattern: /^1[3456789]\d{9}$/ }, { validator: this.handlePhoneCheck } ], validateTrigger: ['change', 'blur'] }">
-        <a-input size="large" placeholder="11 位手机号">
+        <a-input size="large"  v-model="phoneNum"  placeholder="11 位手机号">
           <a-select slot="addonBefore" size="large" defaultValue="+86">
             <a-select-option value="+86">+86</a-select-option>
             <a-select-option value="+87">+87</a-select-option>
@@ -54,7 +53,7 @@
           <a-form-item
             fieldDecoratorId="captcha"
             :fieldDecoratorOptions="{rules: [{ required: true, message: '请输入验证码' }], validateTrigger: 'blur'}">
-            <a-input size="large" type="text" placeholder="验证码">
+            <a-input size="large" v-model="verifyCode" type="text" placeholder="验证码">
               <a-icon slot="prefix" type='mail' :style="{ color: 'rgba(0,0,0,.25)' }"/>
             </a-input>
           </a-form-item>
@@ -68,7 +67,6 @@
             v-text="!state.smsSendBtn && '获取验证码'||(state.time+' s')"></a-button>
         </a-col>
       </a-row>
--->
       <a-form-item>
         <a-button
           size="large"
@@ -113,6 +111,8 @@ export default {
       form: null,
       username: '',
       password: '',
+      verifyCode: '',
+      ReturnVerifyCode: '',
       state: {
         time: 60,
         smsSendBtn: false,
@@ -215,40 +215,57 @@ export default {
     },
 
     handleSubmit () {
-      this.form.validateFields((err, values) => {
-        if (!err) {
-          this.$post('regist', {
-            username: this.username,
-            password: this.password
-          }).then(() => {
-            this.$message.success('注册成功')
-            this.returnLogin()
-          }).catch(() => {
-            this.$message.error('抱歉，注册账号失败')
+      if (this.ReturnVerifyCode !== '') {
+        if (this.ReturnVerifyCode === this.verifyCode) {
+          this.form.validateFields((err, values) => {
+            if (!err) {
+              this.$post('regist', {
+                username: this.username,
+                phoneNum: this.phoneNum,
+                password: this.password
+              }).then(() => {
+                this.$message.success('注册成功')
+                this.returnLogin()
+              }).catch(() => {
+                this.$message.error('抱歉，注册账号失败')
+              })
+            }
           })
+        } else {
+          alert('验证码错误,请检查!')
         }
-      })
+      } else {
+        alert('请输入正确验证码')
+      }
     },
-    // getCaptcha (e) {
-    //   e.preventDefault()
-    //   let that = this
-    //
-    //   this.form.validateFields(['mobile'], {force: true},
-    //     (err, values) => {
-    //       if (!err) {
-    //         this.state.smsSendBtn = true
-    //
-    //         let interval = window.setInterval(() => {
-    //           if (that.state.time-- <= 0) {
-    //             that.state.time = 60
-    //             that.state.smsSendBtn = false
-    //             window.clearInterval(interval)
-    //           }
-    //         }, 1000)
-    //       }
-    //     }
-    //   )
-    // },
+    getCaptcha (e) {
+      e.preventDefault()
+      let that = this
+
+      this.form.validateFields(['mobile'], {force: true},
+        (err, values) => {
+          if (!err) {
+            this.state.smsSendBtn = true
+            this.$post('getCaptcha', {
+              phoneNum: this.phoneNum
+            }).then((ra) => {
+              this.$message.success('获取成功')
+              console.log(ra.data.msgCode)
+              this.ReturnVerifyCode = ra.data.msgCode
+            }).catch(() => {
+              this.$message.error('抱歉，获取失败')
+            })
+            let interval = window.setInterval(() => {
+              if (that.state.time-- <= 0) {
+                that.state.time = 60
+                that.state.smsSendBtn = false
+                window.clearInterval(interval)
+              }
+            }, 1000)
+          }
+        }
+      )
+    },
     returnLogin () {
       this.$emit('regist', 'Login')
     }
