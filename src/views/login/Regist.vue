@@ -216,26 +216,28 @@ export default {
 
     handleSubmit () {
       if (this.ReturnVerifyCode !== '') {
-        if (this.ReturnVerifyCode === this.verifyCode) {
-          this.form.validateFields((err, values) => {
-            if (!err) {
-              this.$post('regist', {
-                username: this.username,
-                phoneNum: this.phoneNum,
-                password: this.password
-              }).then(() => {
+        this.form.validateFields((err, values) => {
+          if (!err) {
+            this.$post('regist', {
+              username: this.username,
+              phoneNum: this.phoneNum,
+              verifyCode: this.verifyCode,
+              password: this.password
+            }).then((r) => {
+              if (r.data.code === '-1') {
+                this.$message.error(r.data.msg)
+              }
+              if (r.data.code === '00') {
                 this.$message.success('注册成功')
                 this.returnLogin()
-              }).catch(() => {
-                this.$message.error('抱歉，注册账号失败')
-              })
-            }
-          })
-        } else {
-          alert('验证码错误,请检查!')
-        }
+              }
+            }).catch(() => {
+              this.$message.error('抱歉，注册账号失败')
+            })
+          }
+        })
       } else {
-        alert('请输入正确验证码')
+        alert('请先获取验证码!')
       }
     },
     getCaptcha (e) {
@@ -249,8 +251,8 @@ export default {
             this.$post('getCaptcha', {
               phoneNum: this.phoneNum
             }).then((ra) => {
-              this.$message.success('获取成功')
-              console.log(ra.data.msgCode)
+              this.$message.success('获取验证码成功!')
+              // console.log(ra.data.msgCode)
               this.ReturnVerifyCode = ra.data.msgCode
             }).catch(() => {
               this.$message.error('抱歉，获取失败')
